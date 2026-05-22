@@ -17,8 +17,8 @@ const CMD_HELP = ['說明', 'help', '幫助'];
 // Shopping status commands: "已買 冰箱", "已放棄 沙發"
 const CMD_BOUGHT_RE = /^已買\s+(.+)$/;
 const CMD_GIVE_UP_RE = /^已放棄\s+(.+)$/;
-// Todo commands: "待辦 買菜", "todo 繳費", "完成 買菜", "取消 買菜"
-const CMD_TODO_RE = /^(?:待辦|todo)\s+(.+)$/i;
+// Todo commands: "待辦 買菜", "待辦：買菜", "todo 繳費", "完成 買菜", "取消 買菜"
+const CMD_TODO_RE = /^(?:待辦|todo)[：:\s]+(.+)$/i;
 const CMD_DONE_RE = /^完成\s+(.+)$/;
 const CMD_CANCEL_RE = /^取消\s+(.+)$/;
 // Delete command: "刪除 冰箱"
@@ -202,6 +202,9 @@ async function handleEvent(event, client) {
       return reply('刪除失敗，請稍後再試。');
     }
   }
+
+  // Bare "待辦" or "todo" with no task name — ignore silently
+  if (/^(?:待辦|todo)$/i.test(text)) return null;
 
   // --- Record any other message as shopping item ---
   const parsed = parseMessage(text);

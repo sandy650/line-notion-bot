@@ -26,6 +26,12 @@ app.post('/webhook', line.middleware(lineConfig), (req, res) => {
 
 app.get('/', (_req, res) => res.send('LINE Notion Bot is running!'));
 
+// Must be defined after routes to catch errors from LINE middleware (e.g. invalid signature)
+app.use((err, req, res, next) => {
+  console.error('[Express Error]', err);
+  res.status(err.status || 500).end();
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
