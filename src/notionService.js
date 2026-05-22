@@ -33,6 +33,11 @@ async function addItemToNotion({ item, conditions, rawMessage, addedBy }) {
 
     const page = existing.results[0];
     const existingCond = page.properties['條件說明'].rich_text[0]?.plain_text || '';
+
+    // Check if this exact condition already exists to avoid duplicates
+    const existingParts = existingCond.split('；').map(s => s.trim()).filter(Boolean);
+    if (existingParts.includes(conditions.trim())) return { exists: true };
+
     const merged = existingCond ? `${existingCond}；${conditions}` : conditions;
     await notion.pages.update({
       page_id: page.id,

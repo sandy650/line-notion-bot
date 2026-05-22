@@ -1,6 +1,15 @@
 const { parseMessage } = require('./messageParser');
 const { addItemToNotion, addTodoToNotion, getRecentItems, getRecentTodos, updateItemStatus, deleteItem } = require('./notionService');
 
+// In-memory dedup: prevent processing the same LINE message twice (e.g. webhook retry)
+const _seenMessageIds = new Set();
+function isNewMessage(id) {
+  if (_seenMessageIds.has(id)) return false;
+  _seenMessageIds.add(id);
+  if (_seenMessageIds.size > 500) _seenMessageIds.delete(_seenMessageIds.values().next().value);
+  return true;
+}
+
 // Trigger words for built-in commands
 const CMD_LIST = ['清單', '列表', 'list'];
 const CMD_TODO_LIST = ['待辦清單', 'todo清單', 'todolist'];
@@ -38,6 +47,9 @@ const HELP_TEXT =
 async function handleEvent(event, client) {
   // Only handle text messages
   if (event.type !== 'message' || event.message.type !== 'text') return null;
+
+  // Ignore duplicate webhook retries
+  if (!isNewMessage(event.message.id)) return null;
 
   const text = event.message.text.trim();
   if (!text) return null;
